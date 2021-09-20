@@ -1,17 +1,12 @@
-﻿using Curso.Api.Filters;
+﻿using Curso.Api.Business.Entities;
+using Curso.Api.Business.Repository;
+using Curso.Api.Configurations;
+using Curso.Api.Filters;
 using Curso.Api.Models;
 using Curso.Api.Models.Usuarios;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
+using Microsoft.Extensions.Configuration;
 using Swashbuckle.AspNetCore.Annotations;
-using System;
-using System.Collections.Generic;
-using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
-using System.Security.Claims;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Curso.Api.Controllers
 {
@@ -19,6 +14,13 @@ namespace Curso.Api.Controllers
     [ApiController]
     public class UsuarioController : ControllerBase
     {
+        private readonly IUsuarioRepository _usuarioRepository;
+        private readonly IAutheticationService _autheticationService;
+        public UsuarioController(IUsuarioRepository usuarioRepository,  IAutheticationService autheticationService)
+        {
+            _usuarioRepository = usuarioRepository;
+            _autheticationService = autheticationService;
+        }
         /// <summary>
         ///  login
         /// </summary>
@@ -32,30 +34,19 @@ namespace Curso.Api.Controllers
         [ValidacaoModelStateCustomizado]
         public IActionResult logar(LoginViewModelsInput loginViewModelsInput)
         {
+            Usuario usuario = _usuarioRepository.ObterUsuario(loginViewModelsInput);
+            if(usuario == null)
+            {
+                return BadRequest("Houve um erro ao tentar Acessar");
+            }
             var UsuarioViewModelOutput = new UsuarioViewModelOutput()
             {
-                Codigo = 1,
-                Login = "teste",
-                Email = "Teste@hotmail.com"
+                Codigo = usuario.Codigo,
+                Login = usuario.Login,
+                Email = usuario.Email
             };
-            var secret = Encoding.ASCII.GetBytes("testeapisenhafraca");
-            var symmetricSecurityKey = new SymmetricSecurityKey(secret);
-            var securityTokenDesciptor = new SecurityTokenDescriptor
-            {
-                Subject = new ClaimsIdentity(new Claim[]
-                {
-                    new Claim(ClaimTypes.NameIdentifier, UsuarioViewModelOutput.Codigo.ToString()),
-                    new Claim(ClaimTypes.NameIdentifier, UsuarioViewModelOutput.Login.ToString()),
-                    new Claim(ClaimTypes.NameIdentifier, UsuarioViewModelOutput.Email.ToString())
-                }),
-                Expires = DateTime.UtcNow.AddDays(1),
-                SigningCredentials = new SigningCredentials(symmetricSecurityKey, SecurityAlgorithms.HmacSha256)
-
-            };
-            var jwtSecurityTokenHandler = new JwtSecurityTokenHandler();
-            var tokenGenerated = jwtSecurityTokenHandler.CreateToken(securityTokenDesciptor);
-            var token =  jwtSecurityTokenHandler.WriteToken(tokenGenerated);
-
+          
+            var token = _autheticationService.GerarToken(UsuarioViewModelOutput);
             return Ok(new 
             {
                 Token = token,
@@ -75,6 +66,15 @@ namespace Curso.Api.Controllers
         [ValidacaoModelStateCustomizado]
         public IActionResult Registrar(RegistroViewModelsInput registroViewModelsInput)
         {
+                     
+            var usuario = new Usuario();
+            usuario.Login = registroViewModelsInput.Login;
+            usuario.Email = registroViewModelsInput.Email;
+            usuario.Senha = registroViewModelsInput.Senha;
+          
+            _usuarioRepository.Adicionar(usuario);
+            _usuarioRepository.Commit();
+           
             return Created("", registroViewModelsInput);
         }
     }

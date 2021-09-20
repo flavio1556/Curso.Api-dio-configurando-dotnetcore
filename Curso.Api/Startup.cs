@@ -16,6 +16,11 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using Curso.Api.Infraestruture.Data.Repository;
+using Curso.Api.Business.Repository;
+using Curso.Api.Infraestruture.Data;
+using Microsoft.EntityFrameworkCore;
+using Curso.Api.Configurations;
 
 namespace Curso.Api
 {
@@ -39,6 +44,31 @@ namespace Curso.Api
 
                });
             services.AddSwaggerGen(c =>
+           {
+               c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+               {
+                   Description = "Jwt Authorization header using the Bearer scheme",
+                   Name = "Authorization",
+                   In = ParameterLocation.Header,
+                   Type = SecuritySchemeType.ApiKey,
+                   Scheme = "Bearer"
+               });
+               c.AddSecurityRequirement(new OpenApiSecurityRequirement
+               {
+                   {
+                   new OpenApiSecurityScheme
+                   {
+                       Reference = new OpenApiReference
+                       {
+                           Type = ReferenceType.SecurityScheme,
+                           Id = "Bearer"
+                       }
+                   },
+                   Array.Empty<string>()
+                   }
+               });
+           });
+            services.AddSwaggerGen(c =>
             {
                 var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
                 var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
@@ -52,7 +82,7 @@ namespace Curso.Api
                 x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
                 x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
             })
-             .AddJwtBearer(x=>
+             .AddJwtBearer(x =>
              {
                  x.RequireHttpsMetadata = false;
                  x.SaveToken = true;
@@ -65,6 +95,13 @@ namespace Curso.Api
                  };
              });
 
+            services.AddDbContext<CursoDbContext>(options => 
+            {
+                options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"));
+            });
+            services.AddScoped<IUsuarioRepository, UsuarioRepository>();
+            services.AddScoped<IAutheticationService, JwtService>();
+            services.AddScoped<ICursoRepository, CursoRepository>();
 
         }
 
@@ -78,10 +115,12 @@ namespace Curso.Api
                 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Curso.Api v1"));
             }
 
+
             app.UseHttpsRedirection();
 
             app.UseRouting();
 
+            app.UseAuthentication();
             app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>

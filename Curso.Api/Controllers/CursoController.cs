@@ -1,4 +1,6 @@
-﻿using Curso.Api.Models.Cursos;
+﻿using Curso.Api.Business.Repository;
+using Curso.Api.Configurations;
+using Curso.Api.Models.Cursos;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -15,7 +17,15 @@ namespace Curso.Api.Controllers
     [ApiController]
     [Authorize]
     public class CursoController : ControllerBase
+
     {
+        private readonly ICursoRepository _cursoRepository;
+        private readonly IAutheticationService _autheticationService;
+        public CursoController(ICursoRepository cursoRepository, IAutheticationService autheticationService)
+        {
+            _cursoRepository = cursoRepository;
+            _autheticationService = autheticationService;
+        }
         /// <summary>
         /// Criacao de curso
         /// </summary>
@@ -27,24 +37,38 @@ namespace Curso.Api.Controllers
         [Route("Created")]
         public async Task<IActionResult> Post(CursoViewModelInput cursoViewModelInput)
         {
+
             var codigoDoUsuario = int.Parse(User.FindFirst(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
+            Business.Entities.Curso curso = new Business.Entities.Curso
+            {
+                CodigoUsuario = codigoDoUsuario,
+                Descricao = cursoViewModelInput.Descricao,
+                Nome = cursoViewModelInput.Nome
+            };
+            _cursoRepository.Adicionar(curso);
+            _cursoRepository.Commit();
+
             return Created("",cursoViewModelInput);
         }
     
         [SwaggerResponse(statusCode: 200, Description = "Sucesso ao autenticar")]
         [SwaggerResponse(statusCode: 400, Description = "Não autorizado")]
         [HttpGet]
-        [Route("Get")]
-        public async Task<IActionResult> Get()
+        [Route("Get{id}")]
+        public async Task<IActionResult> Get(int id)
         {
-            //var codigoDoUsuario = int.Parse(User.FindFirst(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
-            var Cursos = new List<CursoViewModelOutput>();
-            Cursos.Add(new CursoViewModelOutput()
+        //    var Cursos = new List<Business.Entities.Curso>();
+            var Cursos = _cursoRepository.ObterPorCodigoUsuario(id)
+                .Select(s => new CursoViewModelOutput()
+                {
+                    Nome = s.Nome,
+                    Descricao = s.Descricao,
+                    Login = s.Usuario.Login
+                });
+            if(Cursos.Count() == 0)
             {
-                Codigo = 1,
-                Descricao = "teste",
-                Nome = "teste"
-            });
+                return NotFound();
+            }
             return Ok(Cursos);
         }
     }
