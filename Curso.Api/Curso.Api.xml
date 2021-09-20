@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Curso.Api</name>
+    </assembly>
+    <members>
+        <member name="M:Curso.Api.Controllers.CursoController.Post(Curso.Api.Models.Cursos.CursoViewModelInput)">
+            <summary>
+            Criacao de curso
+            </summary>
+            <param name="cursoViewModelInput"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Curso.Api.Controllers.UsuarioController.logar(Curso.Api.Models.Usuarios.LoginViewModelsInput)">
+            <summary>
+             login
+            </summary>
+            <param name="loginViewModelsInput"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Curso.Api.Controllers.UsuarioController.Registrar(Curso.Api.Models.Usuarios.RegistroViewModelsInput)">
+            <summary>
+             registro
+            </summary>
+            <param name="registroViewModelsInput"></param>
+            <returns></returns>
+        </member>
+    </members>
+</doc>
