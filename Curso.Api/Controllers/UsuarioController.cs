@@ -26,7 +26,7 @@ namespace Curso.Api.Controllers
         /// </summary>
         /// <param name="loginViewModelsInput"></param>
         /// <returns></returns>
-        [SwaggerResponse(statusCode:200,Description ="Sucesso ao autenticar", Type = typeof(LoginViewModelsInput))]
+        [SwaggerResponse(statusCode:200,Description ="Sucesso ao autenticar", Type = typeof(LoginViewModelOutput))]
         [SwaggerResponse(statusCode: 400, Description = "Campos Obrigatorios", Type = typeof(ValidaCampoViewModelOutput))]
         [SwaggerResponse(statusCode: 500, Description = "Erro interno", Type = typeof(ErroGenericoViewModel))]
         [HttpPost]
@@ -47,7 +47,7 @@ namespace Curso.Api.Controllers
             };
           
             var token = _autheticationService.GerarToken(UsuarioViewModelOutput);
-            return Ok(new 
+            return Ok(new LoginViewModelOutput()
             {
                 Token = token,
                 Usuario = UsuarioViewModelOutput

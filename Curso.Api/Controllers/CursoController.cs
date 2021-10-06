@@ -31,10 +31,11 @@ namespace Curso.Api.Controllers
         /// </summary>
         /// <param name="cursoViewModelInput"></param>
         /// <returns></returns>
-        [SwaggerResponse(statusCode: 201, Description = "Sucesso ao autenticar")]
+        [SwaggerResponse(statusCode: 200, Description = "Sucesso ao autenticar")]
+        [SwaggerResponse(statusCode: 201, Description = "Curso cadastrado", Type = typeof(CursoViewModelOutput))]
         [SwaggerResponse(statusCode: 401, Description = "Não autorizado")]
         [HttpPost]
-        [Route("Created")]
+        
         public async Task<IActionResult> Post(CursoViewModelInput cursoViewModelInput)
         {
 
@@ -50,8 +51,7 @@ namespace Curso.Api.Controllers
 
             return Created("",cursoViewModelInput);
         }
-    
-        [SwaggerResponse(statusCode: 200, Description = "Sucesso ao autenticar")]
+        [SwaggerResponse(statusCode: 201, Description = "Sucesso ao autenticar", Type = typeof(IEnumerable<CursoViewModelOutput>))]        
         [SwaggerResponse(statusCode: 400, Description = "Não autorizado")]
         [HttpGet]
         [Route("Get{id}")]
